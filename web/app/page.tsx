@@ -20,7 +20,7 @@ export default function Home() {
           </div>
 
           <div className="w-full">
-            <FileUploadRoot alignItems="stretch" maxFiles={10}>
+            <FileUploadRoot alignItems="stretch" maxFiles={1}>
               <FileUploadDropzone
                 label="Drag and drop here to upload"
                 description=".pdf files up to 5MB"
