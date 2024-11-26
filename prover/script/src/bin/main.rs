@@ -3,6 +3,8 @@ use sp1_sdk::{include_elf, utils, HashableKey, ProverClient, SP1ProofWithPublicV
 /// The ELF we want to execute inside the zkVM.
 const REGEX_IO_ELF: &[u8] = include_elf!("prover-program");
 
+// use pdf_base64::PDF_BASE64;
+
 fn main() {
     // Setup a tracer for logging.
     utils::setup_logger();
@@ -10,12 +12,16 @@ fn main() {
     // Create a new stdin with d the input for the program.
     let mut stdin = SP1Stdin::new();
 
-    let pattern = "a+".to_string();
-    let target_string = "an era of truth, not trust".to_string();
+    // let pattern = "a+".to_string();
+    // let target_string = "an era of truth, not trust".to_string();
+    let file_bytes = std::fs::read("fatura_net.pdf").unwrap();
+    stdin.write(&file_bytes);
 
-    // // Write in a simple regex pattern.
-    stdin.write(&pattern);
-    stdin.write(&target_string);
+    // // // Write in a simple regex pattern.
+    // stdin.write(&pattern);
+    // stdin.write(&target_string);
+
+    // stdin.write(&PDF_BASE64);
 
     // Generate the proof for the given program and input.
     let client = ProverClient::new();
@@ -31,12 +37,16 @@ fn main() {
     client.verify(&proof, &vk).expect("verification failed");
 
     // Test a round trip of proof serialization and deserialization.
-    proof.save("proof-with-pis.bin").expect("saving proof failed");
+    proof
+        .save("proof-with-pis.bin")
+        .expect("saving proof failed");
     let deserialized_proof =
         SP1ProofWithPublicValues::load("proof-with-pis.bin").expect("loading proof failed");
 
     // Verify the deserialized proof.
-    client.verify(&deserialized_proof, &vk).expect("verification failed");
+    client
+        .verify(&deserialized_proof, &vk)
+        .expect("verification failed");
 
     println!("successfully generated and verified proof for the program!")
 }

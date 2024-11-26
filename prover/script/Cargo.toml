@@ -4,6 +4,10 @@ name = "prover-script"
 edition = "2021"
 default-run = "prover"
 
+[lib]
+name = "pdf_base64"
+path = "src/pdf_base64.rs"
+
 [[bin]]
 name = "prover"
 path = "src/bin/main.rs"

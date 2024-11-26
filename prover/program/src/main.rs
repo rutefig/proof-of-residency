@@ -3,7 +3,12 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
-use regex::Regex;
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+    path::Path,
+};
+// use regex::Regex;
 
 // These two lines are necessary for the program to properly compile.
 //
@@ -12,20 +17,27 @@ use regex::Regex;
 
 pub fn main() {
     // Read two inputs from the prover: a regex pattern and a target string.
-    let pattern = sp1_zkvm::io::read::<String>();
-    let target_string = sp1_zkvm::io::read::<String>();
+    // let pattern = sp1_zkvm::io::read::<String>();
+    // let target_string = sp1_zkvm::io::read::<String>();
+    // let pdf_base64 = sp1_zkvm::io::read::<String>();
+    let pdf_bytes = sp1_zkvm::io::read::<Vec<u8>>();
 
-    // Try to compile the regex pattern. If it fails, write `false` as output and return.
-    let regex = match Regex::new(&pattern) {
-        Ok(regex) => regex,
-        Err(_) => {
-            panic!("Invalid regex pattern");
-        }
-    };
+    // let pdf_text = pdf_extract::extract_text_from_mem(&pdf_bytes).unwrap();
 
-    // Perform the regex search on the target string.
-    let result = regex.is_match(&target_string);
+    // let result = BASE64_STANDARD.decode(pdf_base64.as_bytes()).unwrap();
+
+    // // Try to compile the regex pattern. If it fails, write `false` as output and return.
+    // let regex = match Regex::new(&pattern) {
+    //     Ok(regex) => regex,
+    //     Err(_) => {
+    //         panic!("Invalid regex pattern");
+    //     }
+    // };
+
+    // // Perform the regex search on the target string.
+    // let result = regex.is_match(&target_string);
+    // let result = pdf_text.contains("Lisboa");
 
     // Write the result (true or false) to the output.
-    sp1_zkvm::io::commit(&result);
+    sp1_zkvm::io::commit(&true);
 }
