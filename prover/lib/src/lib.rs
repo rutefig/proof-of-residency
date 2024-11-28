@@ -1,30 +1,12 @@
 use pdf_extract;
+use portugal::{extract_postal_code, is_valid_atcud};
 use regex::Regex;
+mod portugal;
 
-fn is_valid_atcud(text: &str) -> Option<String> {
-    // ATCUD format: XXXXXXXX-Y+
-    // where X is an 8-character series and Y is one or more digits
-    let re = Regex::new(r"([A-Z0-9]{8}-\d+)").unwrap();
-    
-    // Find all matches and return the first valid one
-    let valid_atcud = re.find_iter(text)
-        .map(|m| m.as_str().to_string())
-        .find(|atcud| {
-            // Additional validation can be added here if needed
-            let parts: Vec<&str> = atcud.split('-').collect();
-            if parts.len() != 2 {
-                return false;
-            }
-            
-            let series = parts[0];
-            let sequence = parts[1];
-            
-            // Verify series is exactly 8 characters
-            series.len() == 8 && 
-            // Verify sequence has at least 1 digit and all characters are digits
-            !sequence.is_empty() && sequence.chars().all(|c| c.is_digit(10))
-        });
-        valid_atcud
+fn is_base64(s: &str) -> bool {
+    // Basic check if string looks like base64
+    let base64_regex = Regex::new(r"^[A-Za-z0-9+/]*={0,2}$").unwrap();
+    base64_regex.is_match(s.trim()) && s.len() % 4 == 0
 }
 
 pub fn run(pdf_bytes: &[u8]) -> bool {
@@ -38,8 +20,11 @@ pub fn run(pdf_bytes: &[u8]) -> bool {
     
     println!(r#"{:#?}"#, pdf);
 
+    // check the text contains a valid Portuguese postal code
+    let postal_code = extract_postal_code(&pdf);
+
     // check the text contains a valid ATCUD
-    is_valid_atcud(&pdf).is_some()
+    is_valid_atcud(&pdf).is_some() && postal_code.is_some()
 
     // TODO: Validate Proof of Residency Scope
 }
@@ -50,7 +35,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let file_bytes = std::fs::read("fatura_net.pdf").unwrap();
+        let file_bytes = std::fs::read("FaturaIberdrola.pdf").unwrap();
         let result = run(&file_bytes);
         assert_eq!(result, true);
     }
