@@ -1,18 +1,17 @@
-use warp::{reject::Rejection, Filter};
+use handlers::{handle_rejection, upload};
+use warp::Filter;
 
 mod handlers;
 
-type Result<T> = std::result::Result<T, Rejection>;
-
 #[tokio::main]
 async fn main() {
-    let root = warp::path::end().map(|| "Welcome to my warp server!");
-    let get_hello_route = warp::path("hello")
-        .and(warp::get())
-        .and_then(handlers::get_hello);
+    let upload_route = warp::path("upload")
+        .and(warp::post())
+        .and(warp::multipart::form().max_length(5_000_000))
+        .and_then(upload);
+    let download_route = warp::path("files").and(warp::fs::dir("./files/"));
 
-    let routes = root
-        .or(get_hello_route)
-        .with(warp::cors().allow_any_origin());
-    warp::serve(routes).run(([127, 0, 0, 1], 5000)).await;
+    let router = upload_route.or(download_route).recover(handle_rejection);
+    println!("Server started at localhost:8080");
+    warp::serve(router).run(([0, 0, 0, 0], 8080)).await;
 }
