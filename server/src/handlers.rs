@@ -3,6 +3,7 @@ use futures::{StreamExt, TryStreamExt};
 use std::convert::Infallible;
 use uuid::Uuid;
 use warp::{http::StatusCode, multipart::FormData, Rejection, Reply};
+use prover_lib;
 
 pub(super) async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
     let mut parts = form.into_stream();
@@ -43,12 +44,16 @@ pub(super) async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
                     warp::reject::reject()
                 })?;
 
-            let file_name = format!("./files/{}.{}", Uuid::new_v4(), file_ending);
-            tokio::fs::write(&file_name, value).await.map_err(|e| {
-                eprint!("error writing file: {}", e);
-                warp::reject::reject()
-            })?;
-            println!("created file: {}", file_name);
+            // let file_name = format!("./files/{}.{}", Uuid::new_v4(), file_ending);
+            // tokio::fs::write(&file_name, value).await.map_err(|e| {
+            //     eprint!("error writing file: {}", e);
+            //     warp::reject::reject()
+            // })?;
+            // println!("created file: {}", file_name);
+
+            let result = prover_lib::run(&value);
+
+            println!("result: {}", result);
         }
     }
 
