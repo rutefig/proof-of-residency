@@ -9,9 +9,13 @@ async fn main() {
         .and(warp::post())
         .and(warp::multipart::form().max_length(5_000_000))
         .and_then(upload);
-    let download_route = warp::path("files").and(warp::fs::dir("./files/"));
 
-    let router = upload_route.or(download_route).recover(handle_rejection);
+    let cors = warp::cors()
+        .allow_any_origin()
+        .allow_headers(vec!["content-type"])
+        .allow_methods(vec!["POST", "GET"]);
+
+    let router = upload_route.recover(handle_rejection).with(cors);
     println!("Server started at localhost:8080");
     warp::serve(router).run(([0, 0, 0, 0], 8080)).await;
 }
