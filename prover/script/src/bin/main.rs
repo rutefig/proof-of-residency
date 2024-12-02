@@ -3,8 +3,6 @@ use sp1_sdk::{include_elf, utils, HashableKey, ProverClient, SP1ProofWithPublicV
 /// The ELF we want to execute inside the zkVM.
 const REGEX_IO_ELF: &[u8] = include_elf!("prover-program");
 
-// use pdf_base64::PDF_BASE64;
-
 fn main() {
     // Setup a tracer for logging.
     utils::setup_logger();
@@ -12,19 +10,13 @@ fn main() {
     // Create a new stdin with d the input for the program.
     let mut stdin = SP1Stdin::new();
 
-    // let pattern = "a+".to_string();
-    // let target_string = "an era of truth, not trust".to_string();
     let file_bytes = std::fs::read("fatura_net.pdf").unwrap();
+
     stdin.write(&file_bytes);
-
-    // // // Write in a simple regex pattern.
-    // stdin.write(&pattern);
-    // stdin.write(&target_string);
-
-    // stdin.write(&PDF_BASE64);
 
     // Generate the proof for the given program and input.
     let client = ProverClient::new();
+    println!("Prover client created");
     let (pk, vk) = client.setup(REGEX_IO_ELF);
     println!("vk: {:?}", vk.bytes32());
     let mut proof = client.prove(&pk, stdin).run().expect("proving failed");

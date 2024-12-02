@@ -3683,6 +3683,7 @@ dependencies = [
 name = "prover-program"
 version = "0.1.0"
 dependencies = [
+ "prover-lib",
  "sp1-zkvm",
 ]
 

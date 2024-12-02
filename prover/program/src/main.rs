@@ -3,13 +3,6 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
-use std::{
-    fs::File,
-    io::{BufReader, Read},
-    path::Path,
-};
-// use regex::Regex;
-
 // These two lines are necessary for the program to properly compile.
 //
 // Under the hood, we wrap your main function with some extra code so that it behaves properly
@@ -21,6 +14,10 @@ pub fn main() {
     // let target_string = sp1_zkvm::io::read::<String>();
     // let pdf_base64 = sp1_zkvm::io::read::<String>();
     let pdf_bytes = sp1_zkvm::io::read::<Vec<u8>>();
+
+    let result = prover_lib::run(&pdf_bytes);
+
+    println!("result: {}", result);
 
     // let pdf_text = pdf_extract::extract_text_from_mem(&pdf_bytes).unwrap();
 
@@ -39,5 +36,5 @@ pub fn main() {
     // let result = pdf_text.contains("Lisboa");
 
     // Write the result (true or false) to the output.
-    sp1_zkvm::io::commit(&true);
+    sp1_zkvm::io::commit(&result);
 }

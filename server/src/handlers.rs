@@ -1,25 +1,38 @@
 use bytes::BufMut;
 use futures::{StreamExt, TryStreamExt};
+use prover_lib;
 use std::convert::Infallible;
 use warp::{http::StatusCode, multipart::FormData, Rejection, Reply};
-use prover_lib;
 
 pub(super) async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
     let mut parts = form.into_stream();
-    println!("parts: {:#?}", parts);
+
     while let Some(Ok(p)) = parts.next().await {
         if p.name() == "file" {
-            println!("part {:#?}", p);
             let content_type = p.content_type();
-            let file_ending;
             match content_type {
+                // for now only pdf files are supported
                 Some(file_type) => match file_type {
                     "application/pdf" => {
-                        file_ending = "pdf";
+                        let value = p
+                            .stream()
+                            .try_fold(Vec::new(), |mut vec, data| {
+                                vec.put(data);
+                                async move { Ok(vec) }
+                            })
+                            .await
+                            .map_err(|e| {
+                                eprintln!("reading file error: {}", e);
+                                warp::reject::reject()
+                            })?;
+
+                        let result = prover_lib::run(&value);
+
+                        println!("result: {}", result);
+
+                        return Ok(warp::reply::json(&result));
                     }
-                    "image/png" => {
-                        file_ending = "png";
-                    }
+
                     v => {
                         eprintln!("invalid file type found: {}", v);
                         return Err(warp::reject::reject());
@@ -30,31 +43,18 @@ pub(super) async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
                     return Err(warp::reject::reject());
                 }
             }
-
-            let value = p
-                .stream()
-                .try_fold(Vec::new(), |mut vec, data| {
-                    vec.put(data);
-                    async move { Ok(vec) }
-                })
-                .await
-                .map_err(|e| {
-                    eprintln!("reading file error: {}", e);
-                    warp::reject::reject()
-                })?;
-
-            let result = prover_lib::run(&value);
-
-            println!("result: {}", result);
-
-            return Ok(warp::reply::json(&result));
         }
     }
 
     Ok(warp::reply::json(&"success"))
 }
 
-pub(super) async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
+
+// TODO: handle email login with zk email
+
+pub(super) async fn handle_rejection(
+    err: Rejection,
+) -> std::result::Result<impl Reply, Infallible> {
     let (code, message) = if err.is_not_found() {
         (StatusCode::NOT_FOUND, "Not Found".to_string())
     } else if err.find::<warp::reject::PayloadTooLarge>().is_some() {

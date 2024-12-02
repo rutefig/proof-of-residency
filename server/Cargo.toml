@@ -9,4 +9,8 @@ warp = "0.3"
 uuid = { version = "0.8", features = ["v4"] }
 futures = { version = "0.3", default-features = false }
 bytes = "1.0"
+sp1-sdk = "3.0.0"
 prover-lib = { path = "../prover/lib" }
+
+[build-dependencies]
+sp1-helper = "3.0.0"

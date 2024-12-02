@@ -1,5 +1,13 @@
 use regex::Regex;
 
+pub(crate) fn validate(pdf_text: String) -> bool {
+     // check the text contains a valid Portuguese postal code
+     let postal_code = extract_postal_code(&pdf_text);
+
+     // check the text contains a valid ATCUD
+     is_valid_atcud(&pdf_text).is_some() && postal_code.is_some()
+}
+
 pub(super) fn is_valid_atcud(text: &str) -> Option<String> {
     // ATCUD format: XXXXXXXX-Y+
     // where X is an 8-character series and Y is one or more digits
