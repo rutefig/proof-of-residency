@@ -11,6 +11,7 @@ futures = { version = "0.3", default-features = false }
 bytes = "1.0"
 sp1-sdk = "3.0.0"
 prover-lib = { path = "../prover/lib" }
+hyle_contract = { git = "https://github.com/hyle-org/hyle-cosmos.git", branch = "main" }
 
 [build-dependencies]
 sp1-helper = "3.0.0"

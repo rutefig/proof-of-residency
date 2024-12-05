@@ -15,6 +15,10 @@ serde = { version = "1.0.200", default-features = false, features = ["derive"] }
 clap = { version = "4.0", features = ["derive", "env"] }
 tracing = "0.1.40"
 hex = "0.4.3"
+tokio = { version = "1.12", features = ["macros", "fs", "rt-multi-thread"] }
+warp = "0.3"
+futures = { version = "0.3", default-features = false }
+bytes = "1.0"
 
 [build-dependencies]
 sp1-helper = "3.0.0"
