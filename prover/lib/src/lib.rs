@@ -1,6 +1,6 @@
 mod portugal;
 
-pub fn run(pdf_bytes: &[u8]) -> bool {
+pub fn run(pdf_bytes: &[u8]) -> String {
     use pdf_extract;
     use portugal;
     // TODO: If the file is encoded in base64, decode it
@@ -21,6 +21,6 @@ mod tests {
     fn it_works() {
         let file_bytes = std::fs::read("FaturaIberdrola.pdf").unwrap();
         let result = run(&file_bytes);
-        assert_eq!(result, true);
+        assert_eq!(result, "Portugal");
     }
 }

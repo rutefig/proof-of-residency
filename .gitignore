@@ -1,2 +1,5 @@
 # MacOS nuisances
 .DS_Store
+
+# For now ignore files in the examples dir - TODO: make a generic example to be used for testing
+/examples/*

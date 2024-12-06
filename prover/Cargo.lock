@@ -2209,6 +2209,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 
 [[package]]
+name = "hyle_contract"
+version = "0.1.0"
+source = "git+https://github.com/hyle-org/hyle-cosmos.git?branch=main#1b23ae3c5d598577a8c59c69f9c1bb67f9c2cfe4"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "hyper"
 version = "0.14.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3741,6 +3749,7 @@ dependencies = [
 name = "prover-program"
 version = "0.1.0"
 dependencies = [
+ "hyle_contract",
  "prover-lib",
  "sp1-zkvm",
 ]

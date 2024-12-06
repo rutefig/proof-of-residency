@@ -34,6 +34,8 @@ async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
                                 warp::reject::reject()
                             })?;
 
+                        // TODO: register the contract
+
                         // Create a new stdin with d the input for the program.
                         let mut stdin = SP1Stdin::new();
 
