@@ -1,12 +1,11 @@
 use bytes::BufMut;
 use futures::{StreamExt, TryStreamExt};
-use hyle_contract::HyleInput;
 use prover_script::hyle::{Hyle, HyleNetwork};
 use sp1_sdk::{
     include_elf, network::proto::network::ProofMode, utils, HashableKey, NetworkProverV1,
     ProverClient, SP1ProofWithPublicValues, SP1Stdin,
 };
-use std::{convert::Infallible, fs};
+use std::convert::Infallible;
 use warp::{
     filters::multipart::FormData, http::StatusCode, reject::Rejection, reply::Reply, Filter,
 };
@@ -48,7 +47,7 @@ async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
                         let null_state = 0u32.to_be_bytes().to_vec();
 
                         let hyle_input = hyle
-                            .publish_payload("".into(), "residency", "Portugal", &null_state, &value)
+                            .publish_payload("default", "residency", "Portugal", &null_state, &value)
                             .unwrap();
 
                         stdin.write(&hyle_input);
