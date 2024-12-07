@@ -1,10 +1,12 @@
 use bytes::BufMut;
 use futures::{StreamExt, TryStreamExt};
+use hyle_contract::HyleInput;
+use prover_script::hyle::{Hyle, HyleNetwork};
 use sp1_sdk::{
     include_elf, network::proto::network::ProofMode, utils, HashableKey, NetworkProverV1,
     ProverClient, SP1ProofWithPublicValues, SP1Stdin,
 };
-use std::convert::Infallible;
+use std::{convert::Infallible, fs};
 use warp::{
     filters::multipart::FormData, http::StatusCode, reject::Rejection, reply::Reply, Filter,
 };
@@ -34,24 +36,37 @@ async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
                                 warp::reject::reject()
                             })?;
 
-                        // TODO: register the contract
-
                         // Create a new stdin with d the input for the program.
                         let mut stdin = SP1Stdin::new();
 
-                        stdin.write(&value);
+                        let mut home_dir = std::env::home_dir().unwrap();
+                        // TODO: change to configurable path
+                        home_dir.push("Documents/Projects/Hyle/hyle-cosmos/hyled");
 
+                        let hyle = Hyle::new(HyleNetwork::Devnet, &home_dir);
+
+                        let null_state = 0u32.to_be_bytes().to_vec();
+
+                        let hyle_input = hyle
+                            .publish_payload("".into(), "residency", "Portugal", &null_state, &value)
+                            .unwrap();
+
+                        stdin.write(&hyle_input);
+
+                        // LOCAL PROVER
                         // Generate the proof for the given program and input.
-                        // let client = ProverClient::new();
-                        let network = NetworkProverV1::new();
-                        // println!("Prover client created");
-                        // let (pk, vk) = client.setup(REGEX_IO_ELF);
-                        // println!("vk: {:?}", vk.bytes32());
-                        // let mut proof = client.prove(&pk, stdin).run().expect("proving failed");
-                        let mut proof = network
-                            .prove(REGEX_IO_ELF, stdin, ProofMode::Core, None)
-                            .await
-                            .expect("proving failed");
+                        let client = ProverClient::new();
+                        println!("Prover client created");
+                        let (pk, vk) = client.setup(REGEX_IO_ELF);
+                        println!("vk: {:?}", vk.bytes32());
+                        let mut proof = client.prove(&pk, stdin).run().expect("proving failed");
+                        
+                        // NETWORK PROVER
+                        // let network = NetworkProverV1::new();
+                        // let mut proof = network
+                        //     .prove(REGEX_IO_ELF, stdin, ProofMode::Core, None)
+                        //     .await
+                        //     .expect("proving failed");
 
                         // Read the output.
                         let res = proof.public_values.read::<bool>();
@@ -61,23 +76,20 @@ async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
                         // client.verify(&proof, &vk).expect("verification failed");
 
                         // Test a round trip of proof serialization and deserialization. - LATER
-                        // proof
-                        //     .save("proof-with-pis.bin")
-                        //     .expect("saving proof failed");
-                        // let deserialized_proof =
-                        //     SP1ProofWithPublicValues::load("proof-with-pis.bin")
-                        //         .expect("loading proof failed");
+                        proof
+                            .save("proof-with-pis.bin")
+                            .expect("saving proof failed");
 
-                        // // Verify the deserialized proof.
-                        // // client
-                        // //     .verify(&deserialized_proof, &vk)
-                        // //     .expect("verification failed");
+                        // // read proof file and return it
+                        let proof = std::fs::read("proof-with-pis.bin").unwrap();
 
-                        // println!("successfully generated and verified proof for the program!");
+                        let response_data = serde_json::json!({
+                            "success": true,
+                            "result": res,  // The boolean verification result
+                            "proof": proof,
+                        });
 
-                        let result = proof.public_values.read::<bool>();
-
-                        return Ok(warp::reply::json(&result));
+                        return Ok(warp::reply::json(&response_data));
                     }
 
                     v => {

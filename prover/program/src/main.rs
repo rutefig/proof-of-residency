@@ -12,18 +12,22 @@ sp1_zkvm::entrypoint!(main);
 
 pub fn main() {
     // Read a series of bytes from the input, which should be a PDF file.
-    let pdf_bytes = sp1_zkvm::io::read::<Vec<u8>>();
+    // let pdf_bytes = sp1_zkvm::io::read::<Vec<u8>>();
+    let input: HyleInput<Vec<u8>> = sp1_zkvm::io::read::<HyleInput<Vec<u8>>>();
+
+    let pdf_bytes = input.program_inputs;
 
     let result = prover_lib::run(&pdf_bytes);
 
-    // The result should be "Portugal", otherwise this is not a valid proof
-    assert!(
-        result == "Portugal",
-        "This document is not a valid Portuguese invoice to prove your residency"
-    );
-
-    println!("result: {}", result);
-
-    // Write the result ("Portugal") to the output.
-    sp1_zkvm::io::commit(&result);
+    sp1_zkvm::io::commit(&HyleOutput {
+        program_outputs: result,
+        version: 1,
+        initial_state: "".into(),
+        next_state: "Portugal".into(), // TODO: change this to the actual next state
+        identity: "".into(),
+        tx_hash: input.tx_hash,
+        index: 0,
+        payloads: pdf_bytes,
+        success: result,
+    });
 }

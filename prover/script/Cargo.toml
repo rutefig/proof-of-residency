@@ -19,6 +19,9 @@ tokio = { version = "1.12", features = ["macros", "fs", "rt-multi-thread"] }
 warp = "0.3"
 futures = { version = "0.3", default-features = false }
 bytes = "1.0"
+base64 = "0.22.1"
+hyle_contract = { git = "https://github.com/hyle-org/hyle-cosmos.git", branch = "main" }
+async-std = "1.13.0"
 
 [build-dependencies]
 sp1-helper = "3.0.0"
