@@ -23,7 +23,7 @@ pub fn main() {
         country: Country::Portugal,
     });
 
-    // TODO: Improve 
+    // TODO: Improve the state on Hyle to be more meaningful and useful (using timestamps and scoped location)
     sp1_zkvm::io::commit(&HyleOutput {
         program_outputs: result,
         version: 1,
