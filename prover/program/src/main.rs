@@ -3,6 +3,7 @@
 #![no_main]
 
 use hyle_contract::{HyleInput, HyleOutput};
+use prover_lib::{Config, Country, Scope};
 sp1_zkvm::entrypoint!(main);
 
 // These two lines are necessary for the program to properly compile.
@@ -17,14 +18,18 @@ pub fn main() {
 
     let pdf_bytes = input.program_inputs;
 
-    let result = prover_lib::run(&pdf_bytes);
+    let result = prover_lib::run(&pdf_bytes, Config {
+        scope: Scope::Country,
+        country: Country::Portugal,
+    });
 
+    // TODO: Improve 
     sp1_zkvm::io::commit(&HyleOutput {
         program_outputs: result,
         version: 1,
-        initial_state: "".into(),
+        initial_state: input.initial_state,
         next_state: "Portugal".into(), // TODO: change this to the actual next state
-        identity: "".into(),
+        identity: input.identity,
         tx_hash: input.tx_hash,
         index: 0,
         payloads: pdf_bytes,

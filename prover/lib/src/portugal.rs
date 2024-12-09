@@ -5,8 +5,7 @@ pub(crate) fn validate(pdf_text: String) -> bool {
      let postal_code = extract_postal_code(&pdf_text);
 
      // check the text contains a valid ATCUD and a valid postal
-    //  is_valid_atcud(&pdf_text).is_some() && postal_code.is_some()
-    is_valid_atcud(&pdf_text).is_some()
+     is_valid_atcud(&pdf_text).is_some() && postal_code.is_some()
 }
 
 pub(super) fn is_valid_atcud(text: &str) -> Option<String> {

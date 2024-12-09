@@ -18,3 +18,6 @@ pgo-data.profdata
 
 # Ignore examples pdf files
 lib/*.pdf
+
+# Ignore hyled-data
+script/hyled-data
