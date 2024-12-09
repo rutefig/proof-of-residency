@@ -4,7 +4,7 @@ use prover_script::{
     proof_service::ProofService,
 };
 use sp1_sdk::utils;
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 use warp::Filter;
 
 #[tokio::main]
@@ -12,9 +12,10 @@ async fn main() {
     utils::setup_logger();
 
     let config = ProverConfig::default();
-    let home_dir = std::env::home_dir().unwrap();
-    let mut base_path = home_dir.clone();
-    base_path.push(&config.hyle_base_path);
+    let base_path = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .map(|home| home.join(&config.hyle_base_path))
+        .expect("Could not find home directory");
 
     let proof_service = Arc::new(ProofService::new(&base_path));
     let file_handler = Arc::new(FileHandler::new(proof_service));

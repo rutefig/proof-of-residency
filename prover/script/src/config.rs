@@ -13,7 +13,7 @@ impl Default for ProverConfig {
         Self {
             max_file_size: 5_000_000,
             port: 8080,
-            hyle_base_path: "Documents/Projects/Hyle/hyle-cosmos/hyled".to_string(),
+            hyle_base_path: std::env::var("HYLE_BASE_PATH").expect("HYLE_BASE_PATH not set"),
             proof_output_path: "proof-with-pis.bin".to_string(),
         }
     }
