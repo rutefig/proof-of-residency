@@ -1,0 +1,10 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.12", features = ["macros", "fs", "rt-multi-thread"] }
+warp = "0.3"
+uuid = { version = "1.11.0", features = ["v4", "fast-rng", "macro-diagnostics"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }

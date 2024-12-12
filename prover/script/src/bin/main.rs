@@ -11,7 +11,20 @@ use warp::Filter;
 async fn main() {
     utils::setup_logger();
 
-    let config = ProverConfig::default();
+    let args: Vec<String> = std::env::args().collect();
+    println!("Arguments: {:?}", args);
+
+    // Get port from --port argument
+    let port = args.iter()
+        .position(|arg| arg == "--port")
+        .and_then(|i| args.get(i + 1))
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(8080);
+
+    println!("Starting prover server at port {}", port);
+
+    let mut config = ProverConfig::default();
+    config.port = port;
 
     let prover = Arc::new(ProverInstance::new());
     let verification_key = prover.verification_key();

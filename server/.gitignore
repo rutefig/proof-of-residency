@@ -1,0 +1,12 @@
+# Cargo build
+**/target
+
+# Cargo config
+.cargo
+
+# Profile-guided optimization
+/tmp
+pgo-data.profdata
+
+# Env
+.env

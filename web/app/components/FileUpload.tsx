@@ -10,6 +10,7 @@ import {
 import { broadcastPayloadTx, broadcastProofTx, getNetworkRpcUrl, setupCosmos, uint8ArrayToBase64 } from "hyle-js";
 import { network } from "../utils/network";
 import { ensureContractsRegistered } from "../utils/cosmos";
+import { cleanupProverSession, createProverSession } from "@/api";
 
 type FileUploadResponse = {
     result: boolean;
@@ -21,16 +22,37 @@ type FileUploadResponse = {
 export default function FileUpload() {
     const [uploadStatus, setUploadStatus] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [proverPort, setProverPort] = useState<number | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        setupHyle();
+        setupSession();
+
+        // Cleanup session on unmount
+        return () => {
+            if (sessionId) {
+                cleanupProverSession(sessionId).catch(console.error);
+            }
+        };
     }, []);
+
+    const setupSession = async () => {
+        try {
+            const { session_id, prover_port } = await createProverSession();
+            setSessionId(session_id);
+            setProverPort(prover_port);
+            await setupHyle();
+        } catch (error) {
+            console.error('Failed to setup session:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     const setupHyle = async () => {
         await setupCosmos(getNetworkRpcUrl(network)!);
         await ensureContractsRegistered();
-        setIsLoading(false);
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +82,7 @@ export default function FileUpload() {
 
             formData.append("tx_hash", publishPayload.transactionHash);
 
-            const response = await fetch("http://localhost:8080/upload", {
+            const response = await fetch(`http://localhost:${proverPort}/upload`, {
                 method: "POST",
                 body: formData,
             });
