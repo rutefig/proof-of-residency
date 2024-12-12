@@ -1,10 +1,10 @@
 use prover_script::{
     config::ProverConfig,
     handlers::{self, FileHandler},
-    proof_service::ProofService,
+    proof_service::{ProofService, ProverInstance},
 };
 use sp1_sdk::utils;
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 use warp::Filter;
 
 #[tokio::main]
@@ -12,13 +12,13 @@ async fn main() {
     utils::setup_logger();
 
     let config = ProverConfig::default();
-    let base_path = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .map(|home| home.join(&config.hyle_base_path))
-        .expect("Could not find home directory");
 
-    let proof_service = Arc::new(ProofService::new(&base_path));
-    let file_handler = Arc::new(FileHandler::new(proof_service));
+    let prover = Arc::new(ProverInstance::new());
+    let verification_key = prover.verification_key();
+    println!("Verification key: {}", verification_key);  // Print it for now
+
+    let proof_service = Arc::new(ProofService::new(Arc::clone(&prover)));
+    let file_handler = Arc::new(FileHandler::new(Arc::clone(&proof_service)));
 
     let upload_route = warp::path("upload")
         .and(warp::post())

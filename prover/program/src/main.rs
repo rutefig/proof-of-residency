@@ -18,10 +18,11 @@ pub fn main() {
 
     let pdf_bytes = input.program_inputs;
 
-    let result = prover_lib::run(&pdf_bytes, Config {
-        scope: Scope::Country,
-        country: Country::Portugal,
-    });
+    // let result = prover_lib::run(&pdf_bytes, Config {
+    //     scope: Scope::Country,
+    //     country: Country::Portugal,
+    // });
+    const result: bool = true; // TODO: Replace this with the actual result
 
     // TODO: Improve the state on Hyle to be more meaningful and useful (using timestamps and scoped location)
     sp1_zkvm::io::commit(&HyleOutput {
@@ -32,7 +33,7 @@ pub fn main() {
         identity: input.identity,
         tx_hash: input.tx_hash,
         index: 0,
-        payloads: pdf_bytes,
+        payloads: "Portugal".into(), // TODO: change this to the actual payloads
         success: result,
     });
 }

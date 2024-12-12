@@ -28,30 +28,45 @@ impl FileHandler {
     pub fn new(proof_service: Arc<ProofService>) -> Self {
         Self { proof_service }
     }
-
     pub async fn handle_upload(&self, form: FormData) -> Result<impl Reply, Rejection> {
         let mut parts = form.into_stream();
-
+        let mut file_content: Option<Vec<u8>> = None;
+        let mut tx_hash: Option<String> = None;
+    
         while let Some(Ok(p)) = parts.next().await {
-            if p.name() == "file" {
-                if let Some(file_type) = p.content_type() {
-                    match file_type {
-                        "application/pdf" => {
-                            let file_content = self.read_file_content(p).await?;
-                            let proof_response = self.generate_proof(file_content).await?;
-                            return Ok(warp::reply::json(&proof_response));
-                        }
-                        _ => {
-                            return Err(warp::reject::custom(HandlerError::InvalidFileType(
-                                file_type.to_string(),
-                            )));
+            match p.name() {
+                "file" => {
+                    if let Some(file_type) = p.content_type() {
+                        match file_type {
+                            "application/pdf" => {
+                                file_content = Some(self.read_file_content(p).await?);
+                            }
+                            _ => {
+                                return Err(warp::reject::custom(HandlerError::InvalidFileType(
+                                    file_type.to_string(),
+                                )));
+                            }
                         }
                     }
                 }
+                "tx_hash" => {
+                    // Read tx_hash from form data
+                    let bytes = self.read_file_content(p).await?;
+                    tx_hash = Some(String::from_utf8(bytes)
+                        .map_err(|e| warp::reject::custom(HandlerError::FileReadError(e.to_string())))?);
+                }
+                _ => {}
             }
         }
-
-        Ok(warp::reply::json(&"success"))
+    
+        if let (Some(content), Some(hash)) = (file_content, tx_hash) {
+            let proof_response = self.generate_proof(content, hash).await?;
+            Ok(warp::reply::json(&proof_response))
+        } else {
+            Err(warp::reject::custom(HandlerError::FileReadError(
+                "Missing required fields".to_string(),
+            )))
+        }
     }
 
     async fn read_file_content(
@@ -69,9 +84,9 @@ impl FileHandler {
             })
     }
 
-    async fn generate_proof(&self, file_content: Vec<u8>) -> Result<ProofResponse, Rejection> {
+    async fn generate_proof(&self, file_content: Vec<u8>, tx_hash: String) -> Result<ProofResponse, Rejection> {
         self.proof_service
-            .generate_proof(file_content)
+            .generate_proof(file_content, tx_hash)
             .await
             .map_err(|e| {
                 warp::reject::custom(HandlerError::ProofGenerationError(e.to_string()))
