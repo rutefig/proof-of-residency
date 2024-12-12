@@ -61,7 +61,11 @@ impl FileHandler {
     
         if let (Some(content), Some(hash)) = (file_content, tx_hash) {
             let proof_response = self.generate_proof(content, hash).await?;
-            Ok(warp::reply::json(&proof_response))
+            Ok(warp::reply::with_header(
+                proof_response.proof,
+                "Content-Type",
+                "application/octet-stream"
+            ))
         } else {
             Err(warp::reject::custom(HandlerError::FileReadError(
                 "Missing required fields".to_string(),

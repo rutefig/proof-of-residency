@@ -3,3 +3,5 @@
 
 # Ignore personal example files - you can put your own personal examples here
 /examples/personal/*
+
+/temp/*

@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
 use crate::types::ProofResponse;
+use base64::prelude::*;
 use hyle_contract::HyleInput;
 use sp1_sdk::network::proto::network::ProofMode;
 use sp1_sdk::{
-    include_elf, HashableKey, NetworkProverV1, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin, SP1VerifyingKey
+    include_elf, HashableKey, NetworkProverV1, ProverClient, SP1ProofWithPublicValues,
+    SP1ProvingKey, SP1Stdin, SP1VerifyingKey,
 };
 
 /// The ELF we want to execute inside the zkVM.
@@ -25,6 +27,10 @@ impl ProverInstance {
 
     pub fn verification_key(&self) -> String {
         self.vk.bytes32()
+    }
+
+    pub fn get_elf(&self) -> Vec<u8> {
+        REGEX_IO_ELF.to_vec()
     }
 }
 
@@ -80,10 +86,17 @@ impl ProofService {
             Prover::Network => self.generate_proof_network(stdin).await,
         };
 
+        // Debug: Save verification key
+        let vk = self.prover.verification_key();
+        std::fs::write("debug_vk.txt", &vk)?;
+        println!("Debug: Saved VK to debug_vk.txt: {}", vk);
+
         let verification_result = proof.public_values.read::<bool>();
 
-        proof.save("proof-with-pis.bin")?;
-        let proof_bytes = std::fs::read("proof-with-pis.bin")?;
+        // proof.save("../../temp/proof-with-pis.bin")?;
+        proof.save("../../temp/proof-with-pis.json")?;
+
+        let proof_bytes = std::fs::read("../../temp/proof-with-pis.json")?;
 
         Ok(ProofResponse {
             success: true,
@@ -95,7 +108,11 @@ impl ProofService {
     }
 
     fn generate_proof_local(&self, stdin: SP1Stdin) -> SP1ProofWithPublicValues {
-        self.prover.client.prove(&self.prover.pk, stdin).run().unwrap()
+        self.prover
+            .client
+            .prove(&self.prover.pk, stdin)
+            .run()
+            .unwrap()
     }
 
     async fn generate_proof_network(&self, stdin: SP1Stdin) -> SP1ProofWithPublicValues {
@@ -107,7 +124,6 @@ impl ProofService {
             .await
             .unwrap()
     }
-
 
     fn mock_proof_response(hyle_input: HyleInput<Vec<u8>>) -> ProofResponse {
         let proof_bytes = std::fs::read("proof-with-pis.bin").expect("Failed to read proof file");

@@ -41,18 +41,14 @@ export default function FileUpload() {
         try {
             const { session_id, prover_port } = await createProverSession();
             setSessionId(session_id);
-            setProverPort(prover_port);
-            await setupHyle();
+            await setProverPort(prover_port);
+            await setupCosmos(getNetworkRpcUrl(network)!);
+            await ensureContractsRegistered(prover_port);
         } catch (error) {
             console.error('Failed to setup session:', error);
         } finally {
             setIsLoading(false);
         }
-    }
-
-    const setupHyle = async () => {
-        await setupCosmos(getNetworkRpcUrl(network)!);
-        await ensureContractsRegistered();
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -88,22 +84,20 @@ export default function FileUpload() {
             });
 
             if (response.ok) {
-                const data: FileUploadResponse = await response.json();
-                console.log("Server response:", data);
+                // First ensure we get valid JSON
+                const proofText = await response.text();
+                console.log("Debug: Received proof text:", proofText.substring(0, 100));
+
+                // Then convert to bytes
+                const proofBytes = new TextEncoder().encode(proofText);
 
                 try {
                     if (!isLoading) {
-                        console.log("Proof data:", {
-                            txHash: data.tx_hash,
-                            proofLength: data.proof.length,
-                            proof: uint8ArrayToBase64(data.proof).substring(0, 50) + "..."
-                        });
-                        
                         const result = await broadcastProofTx(
-                            data.tx_hash,
+                            publishPayload.transactionHash,
                             0,
-                            "sp1_residency", 
-                            uint8ArrayToBase64(data.proof)
+                            "sp1_residency",
+                            uint8ArrayToBase64(proofBytes)
                         );
                         console.log("Proof broadcasted:", result);
                     }
