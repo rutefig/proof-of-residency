@@ -7,3 +7,7 @@ edition = "2021"
 regex = "1.11.1"
 base64 = "0.22.1"
 pdf-extract = "0.7.10"
+
+# Shared dependencies from workspace
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -56,7 +56,7 @@ impl ServerManager {
 
     fn spawn_prover_server(&self, port: u16) -> Result<Child, std::io::Error> {
         std::process::Command::new("cargo")
-            .current_dir("../prover/script")
+            .current_dir("../prover/server")
             .env("SP1_PROVER", &self.config.sp1_prover)
             .env("SP1_PRIVATE_KEY", &self.config.sp1_private_key)
             .env("RUST_LOG", "info")

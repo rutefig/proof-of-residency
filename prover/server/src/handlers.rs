@@ -1,8 +1,7 @@
+use crate::error::ServerError;
 use crate::proof_service::ProofService;
-use crate::types::ProofResponse;
 use bytes::BufMut;
 use futures::{StreamExt, TryStreamExt};
-use std::convert::Infallible;
 use std::sync::Arc;
 use warp::{
     filters::multipart::FormData,
@@ -15,34 +14,40 @@ pub struct FileHandler {
     proof_service: Arc<ProofService>,
 }
 
-#[derive(Debug)]
-pub enum HandlerError {
-    InvalidFileType(String),
-    FileReadError(String),
-    ProofGenerationError(String),
-}
-
-impl warp::reject::Reject for HandlerError {}
-
 impl FileHandler {
     pub fn new(proof_service: Arc<ProofService>) -> Self {
         Self { proof_service }
     }
+
     pub async fn handle_upload(&self, form: FormData) -> Result<impl Reply, Rejection> {
-        let mut parts = form.into_stream();
+        let (file_content, tx_hash) = self.extract_form_data(form).await?;
+        
+        let proof_response = self.proof_service
+            .generate_proof(file_content, tx_hash)
+            .await
+            .map_err(|e| warp::reject::custom(e))?;
+
+        Ok(warp::reply::with_header(
+            proof_response.proof,
+            "Content-Type",
+            "application/octet-stream"
+        ))
+    }
+
+    async fn extract_form_data(&self, mut form: FormData) -> Result<(Vec<u8>, String), Rejection> {
         let mut file_content: Option<Vec<u8>> = None;
         let mut tx_hash: Option<String> = None;
-    
-        while let Some(Ok(p)) = parts.next().await {
-            match p.name() {
+
+        while let Some(Ok(part)) = form.next().await {
+            match part.name() {
                 "file" => {
-                    if let Some(file_type) = p.content_type() {
+                    if let Some(file_type) = part.content_type() {
                         match file_type {
                             "application/pdf" => {
-                                file_content = Some(self.read_file_content(p).await?);
+                                file_content = Some(self.read_file_content(part).await?);
                             }
                             _ => {
-                                return Err(warp::reject::custom(HandlerError::InvalidFileType(
+                                return Err(warp::reject::custom(ServerError::InvalidFileType(
                                     file_type.to_string(),
                                 )));
                             }
@@ -50,26 +55,19 @@ impl FileHandler {
                     }
                 }
                 "tx_hash" => {
-                    // Read tx_hash from form data
-                    let bytes = self.read_file_content(p).await?;
+                    let bytes = self.read_file_content(part).await?;
                     tx_hash = Some(String::from_utf8(bytes)
-                        .map_err(|e| warp::reject::custom(HandlerError::FileReadError(e.to_string())))?);
+                        .map_err(|e| warp::reject::custom(ServerError::FileReadError(e.to_string())))?);
                 }
                 _ => {}
             }
         }
-    
-        if let (Some(content), Some(hash)) = (file_content, tx_hash) {
-            let proof_response = self.generate_proof(content, hash).await?;
-            Ok(warp::reply::with_header(
-                proof_response.proof,
-                "Content-Type",
-                "application/octet-stream"
-            ))
-        } else {
-            Err(warp::reject::custom(HandlerError::FileReadError(
+
+        match (file_content, tx_hash) {
+            (Some(content), Some(hash)) => Ok((content, hash)),
+            _ => Err(warp::reject::custom(ServerError::FileReadError(
                 "Missing required fields".to_string(),
-            )))
+            ))),
         }
     }
 
@@ -84,38 +82,29 @@ impl FileHandler {
             })
             .await
             .map_err(|e| {
-                warp::reject::custom(HandlerError::FileReadError(e.to_string()))
-            })
-    }
-
-    async fn generate_proof(&self, file_content: Vec<u8>, tx_hash: String) -> Result<ProofResponse, Rejection> {
-        self.proof_service
-            .generate_proof(file_content, tx_hash)
-            .await
-            .map_err(|e| {
-                warp::reject::custom(HandlerError::ProofGenerationError(e.to_string()))
+                warp::reject::custom(ServerError::FileReadError(e.to_string()))
             })
     }
 }
 
-pub async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
+pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
     let (code, message) = if err.is_not_found() {
         (StatusCode::NOT_FOUND, "Not Found".to_string())
     } else if err.find::<warp::reject::PayloadTooLarge>().is_some() {
         (StatusCode::BAD_REQUEST, "Payload too large".to_string())
-    } else if let Some(e) = err.find::<HandlerError>() {
+    } else if let Some(e) = err.find::<ServerError>() {
         match e {
-            HandlerError::InvalidFileType(t) => (
+            ServerError::InvalidFileType(t) => (
                 StatusCode::BAD_REQUEST,
                 format!("Invalid file type: {}", t),
             ),
-            HandlerError::FileReadError(e) => (
+            ServerError::FileReadError(e) => (
                 StatusCode::BAD_REQUEST,
                 format!("Error reading file: {}", e),
             ),
-            HandlerError::ProofGenerationError(e) => (
+            _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Error generating proof: {}", e),
+                "Internal Server Error".to_string(),
             ),
         }
     } else {

@@ -4,6 +4,6 @@ name = "prover-program"
 edition = "2021"
 
 [dependencies]
-sp1-zkvm = "3.0.0-rc4"
+sp1-zkvm = "3.4.0"
+hyle-contract-sdk = { git = "https://github.com/hyle-org/hyle" }
 prover-lib = { path = "../lib" }
-hyle_contract = { git = "https://github.com/hyle-org/hyle-cosmos.git", branch = "main" }
