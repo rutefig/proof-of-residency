@@ -7,7 +7,7 @@ import {
     FileUploadRoot,
 } from "@/components/ui/file-button";
 
-import { broadcastPayloadTx, broadcastProofTx, getNetworkRpcUrl, setupCosmos, uint8ArrayToBase64 } from "hyle-js";
+import { broadcastBlobTx, broadcastProofTx } from "hyle-js";
 import { network } from "../utils/network";
 import { ensureContractsRegistered } from "../utils/cosmos";
 import { cleanupProverSession, createProverSession } from "@/api";
@@ -42,7 +42,6 @@ export default function FileUpload() {
             const { session_id, prover_port } = await createProverSession();
             setSessionId(session_id);
             await setProverPort(prover_port);
-            await setupCosmos(getNetworkRpcUrl(network)!);
             await ensureContractsRegistered(prover_port);
         } catch (error) {
             console.error('Failed to setup session:', error);
@@ -69,35 +68,35 @@ export default function FileUpload() {
         try {
             setUploadStatus("Uploading...");
 
-            const publishPayload = await broadcastPayloadTx("", [
-                {
-                    contractName: "sp1_residency",
-                    data: "Portugal",
-                },
-            ]);
+            const txHash = await broadcastBlobTx(network, {
+                identity: "", // TODO
+                blobs: [
+                    {
+                        contractName: "sp1_residency",
+                        data: Array.from(new TextEncoder().encode("Portugal")),
+                    },
+                ]
+            });
 
-            formData.append("tx_hash", publishPayload.transactionHash);
+            formData.append("tx_hash", txHash);
 
             const response = await fetch(`http://localhost:${proverPort}/upload`, {
                 method: "POST",
                 body: formData,
             });
+            const proofBuffer = await response.arrayBuffer();
+            const proofBytes = new Uint8Array(proofBuffer);
 
             if (response.ok) {
-                // First ensure we get valid JSON
-                const proofText = await response.text();
-                console.log("Debug: Received proof text:", proofText.substring(0, 100));
-
-                // Then convert to bytes
-                const proofBytes = new TextEncoder().encode(proofText);
 
                 try {
-                    if (!isLoading) {
+                    if (!isLoading) { 
                         const result = await broadcastProofTx(
-                            publishPayload.transactionHash,
+                            network,
+                            txHash,
                             0,
                             "sp1_residency",
-                            uint8ArrayToBase64(proofBytes)
+                            proofBytes
                         );
                         console.log("Proof broadcasted:", result);
                     }

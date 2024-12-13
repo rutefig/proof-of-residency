@@ -32,6 +32,7 @@ export async function ensureContractsRegistered(proverPort: number) {
 
 
         await registerContract(
+            network,
             "sp1",
             "sp1_residency",
             elfBytes,
