@@ -22,6 +22,7 @@ impl ProverInstance {
     pub fn new() -> Self {
         let client = ProverClient::new();
         let (pk, vk) = client.setup(REGEX_IO_ELF);
+        println!("VK: {}", vk.bytes32());
         Self { pk, vk, client }
     }
 
@@ -86,17 +87,12 @@ impl ProofService {
             Prover::Network => self.generate_proof_network(stdin).await,
         };
 
-        // Debug: Save verification key
-        let vk = self.prover.verification_key();
-        std::fs::write("debug_vk.txt", &vk)?;
-        println!("Debug: Saved VK to debug_vk.txt: {}", vk);
-
         let verification_result = proof.public_values.read::<bool>();
 
         // proof.save("../../temp/proof-with-pis.bin")?;
-        proof.save("../../temp/proof-with-pis.json")?;
+        proof.save("../../temp/proof-with-pis.bin")?;
 
-        let proof_bytes = std::fs::read("../../temp/proof-with-pis.json")?;
+        let proof_bytes = std::fs::read("../../temp/proof-with-pis.bin")?;
 
         Ok(ProofResponse {
             success: true,
@@ -111,6 +107,7 @@ impl ProofService {
         self.prover
             .client
             .prove(&self.prover.pk, stdin)
+            .compressed()
             .run()
             .unwrap()
     }
