@@ -9,7 +9,7 @@ import {
 
 import { broadcastBlobTx, broadcastProofTx } from "hyle-js";
 import { network } from "../utils/network";
-import { ensureContractsRegistered } from "../utils/cosmos";
+import { ensureContractsRegistered } from "../utils/hyle";
 import { cleanupProverSession, createProverSession } from "@/api";
 
 type FileUploadResponse = {
@@ -68,7 +68,7 @@ export default function FileUpload() {
         try {
             setUploadStatus("Uploading...");
 
-            const txHash = await broadcastBlobTx(network, {
+            const blobTxHash = await broadcastBlobTx(network, {
                 identity: "", // TODO
                 blobs: [
                     {
@@ -78,7 +78,7 @@ export default function FileUpload() {
                 ]
             });
 
-            formData.append("tx_hash", txHash);
+            formData.append("tx_hash", blobTxHash);
 
             const response = await fetch(`http://localhost:${proverPort}/upload`, {
                 method: "POST",
@@ -93,8 +93,7 @@ export default function FileUpload() {
                     if (!isLoading) { 
                         const result = await broadcastProofTx(
                             network,
-                            txHash,
-                            0,
+                            blobTxHash,
                             "sp1_residency",
                             proofBytes
                         );

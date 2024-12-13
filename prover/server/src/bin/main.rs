@@ -1,6 +1,6 @@
+use prover_server::config::ServerConfig;
 use prover_server::handlers::{self, FileHandler};
 use prover_server::proof_service::{ProofService, ProverInstance};
-use prover_server::config::ServerConfig;
 use std::sync::Arc;
 use warp::Filter;
 
@@ -23,19 +23,10 @@ async fn main() {
             async move { handler.handle_upload(form).await }
         });
 
-    let elf_route = {
-        let prover = Arc::clone(&prover);
-        warp::path("elf")
-            .and(warp::get())
-            .map(move || {
-                let elf_bytes = prover.get_elf();
-                warp::reply::with_header(
-                    elf_bytes,
-                    "Content-Type",
-                    "application/octet-stream",
-                )
-            })
-    };
+    let verification_key_route = warp::path("verification-key")
+        .and(warp::get())
+        .and(with_proof_service(Arc::clone(&proof_service)))
+        .and_then(handlers::get_verification_key);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -43,12 +34,17 @@ async fn main() {
         .allow_methods(vec!["POST", "GET"]);
 
     let routes = upload_route
-        .or(elf_route)
+        .or(verification_key_route)
         .recover(handlers::handle_rejection)
         .with(cors);
 
     println!("Server started at localhost:{}", config.port);
-    warp::serve(routes)
-        .run(([0, 0, 0, 0], config.port))
-        .await;
+    warp::serve(routes).run(([0, 0, 0, 0], config.port)).await;
+}
+
+// Helper function to pass proof service to handlers
+fn with_proof_service(
+    proof_service: Arc<ProofService>,
+) -> impl Filter<Extract = (Arc<ProofService>,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || Arc::clone(&proof_service))
 }

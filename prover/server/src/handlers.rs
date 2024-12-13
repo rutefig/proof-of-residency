@@ -87,6 +87,15 @@ impl FileHandler {
     }
 }
 
+pub async fn get_verification_key(
+    proof_service: Arc<ProofService>,
+) -> Result<impl Reply, Rejection> {
+    let vk = proof_service.get_verification_key();
+    Ok(warp::reply::json(&serde_json::json!({
+        "verification_key": vk
+    })))
+}
+
 pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
     let (code, message) = if err.is_not_found() {
         (StatusCode::NOT_FOUND, "Not Found".to_string())

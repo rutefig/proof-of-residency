@@ -25,10 +25,6 @@ impl ProverInstance {
     pub fn verification_key(&self) -> String {
         self.vk.bytes32()
     }
-
-    pub fn get_elf(&self) -> Vec<u8> {
-        REGEX_IO_ELF.to_vec()
-    }
 }
 
 pub struct ProofService {
@@ -38,6 +34,10 @@ pub struct ProofService {
 impl ProofService {
     pub fn new(prover: Arc<ProverInstance>) -> Self {
         Self { prover }
+    }
+
+    pub fn get_verification_key(&self) -> String {
+        self.prover.verification_key()
     }
 
     pub async fn generate_proof(
