@@ -57,10 +57,10 @@ impl ProofService {
 
         let verification_result = proof.public_values.read::<bool>();
         proof
-            .save("../../temp/proof-with-pis.bin")
+            .save("../temp/proof-with-pis.bin")
             .map_err(|e| ServerError::Internal(e.to_string()))?;
 
-        let proof_bytes = std::fs::read("../../temp/proof-with-pis.bin")
+        let proof_bytes = std::fs::read("../temp/proof-with-pis.bin")
             .map_err(|e| ServerError::Internal(e.to_string()))?;
 
         Ok(ProofResponse {
