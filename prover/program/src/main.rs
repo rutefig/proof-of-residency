@@ -4,7 +4,7 @@
 #![no_main]
 
 use hyle_contract_sdk::{BlobIndex, HyleOutput, Identity, StateDigest, TxHash};
-// use prover_lib::{Config, Country, Scope};
+use prover_lib::{Config, Country, Scope};
 sp1_zkvm::entrypoint!(main);
 
 // These two lines are necessary for the program to properly compile.
@@ -17,11 +17,10 @@ pub fn main() {
     let pdf_bytes = sp1_zkvm::io::read::<Vec<u8>>();
     let tx_hash = sp1_zkvm::io::read::<String>();
 
-    // let result = prover_lib::run(&pdf_bytes, Config {
-    //     scope: Scope::Country,
-    //     country: Country::Portugal,
-    // });
-    const result: bool = true; // TODO: Replace this with the actual result
+    let result = prover_lib::run(&pdf_bytes, Config {
+        scope: Scope::Country,
+        country: Country::Portugal,
+    });
 
     // TODO: Improve the state on Hyle to be more meaningful and useful (using timestamps and scoped location)
     sp1_zkvm::io::commit(&HyleOutput {

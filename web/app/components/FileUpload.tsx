@@ -12,13 +12,6 @@ import { network } from "../utils/network";
 import { ensureContractsRegistered } from "../utils/hyle";
 import { cleanupProverSession, createProverSession } from "@/api";
 
-type FileUploadResponse = {
-    result: boolean;
-    success: boolean;
-    proof: Uint8Array;
-    tx_hash: string;
-}
-
 export default function FileUpload() {
     const [uploadStatus, setUploadStatus] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(true);
