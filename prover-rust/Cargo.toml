@@ -1,0 +1,63 @@
+[package]
+name = "proof-of-residency"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "lib"
+path = "src/lib/mod.rs"
+
+[[bin]]
+name = "risc0-runner"
+required-features = ["risc0"]
+
+[[bin]]
+name = "proof-of-residency-guest-risc0"
+path = "src/contract.rs"
+required-features = ["risc0-guest"]
+
+[[bin]]
+name = "sp1-runner"
+required-features = ["sp1"]
+
+[[bin]]
+name = "proof-of-residency-guest-sp1"
+path = "src/contract.rs"
+required-features = ["sp1-guest"]
+
+[dependencies]
+hyle-contract-sdk = { git = "https://github.com/hyle-org/hyle" }
+clap = { version = "4.5.23", features = ["derive"] }
+borsh = "1.5.3"
+
+risc0-zkvm = { version = "1.2.0", default-features = false, features = [
+    "std",
+], optional = true }
+sp1-zkvm = { version = "3.4.0", optional = true }
+sp1-sdk = { version = "3.4.0", default-features = false, optional = true }
+serde_json = "1.0.133"
+
+# lib dependencies
+regex = "1.11.1"
+base64 = "0.22.1"
+pdf-extract = "0.7.10"
+
+[build-dependencies]
+risc0-build = { version = "1.2.0", optional = true }
+sp1-helper = { version = "3.4.0", optional = true }
+
+[package.metadata.risc0]
+methods = ["."]
+
+[features]
+#default = ["sp1"]
+sp1 = ["sp1-sdk", "sp1-zkvm", "sp1-helper"]
+sp1-guest = ["sp1-zkvm", "hyle-contract-sdk/sp1"]
+
+risc0 = [
+    "risc0-zkvm",
+    "risc0-zkvm/prove",
+    "hyle-contract-sdk/risc0",
+    "risc0-build",
+]
+risc0-guest = ["risc0-zkvm", "hyle-contract-sdk/risc0"]
