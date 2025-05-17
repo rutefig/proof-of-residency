@@ -20,7 +20,7 @@ The Proof of Residency project employs the following technologies:
 
 - **[ATCud](https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/Faturacao/Comunicacao_Series_ATCUD/Paginas/default.aspx)** signature for documents
 - **[SP1](https://docs.succinct.xyz/)**: Extracts and verifies document signatures from emails with attached PDFs; generates proof.
-- **[Hylé](https://docs.hyle.eu/)**: Adds verifiability to residency proofs.
+- **[Hyli](https://docs.hyli.org/)**: Adds verifiability to residency proofs.
 
 ### Step by step
 
@@ -32,7 +32,7 @@ The Proof of Residency project employs the following technologies:
 
 ## How to install and run
 
-1. Clone [Hylé](https://github.com/Hyle-org/hyle) and start a single node devnet
+1. Clone [Hyli](https://github.com/hyli-org/hyli) and start a single node devnet
 
 2. Build the prover
 
@@ -67,7 +67,8 @@ Contributions are welcome! To get started:
 
 ## Sponsor
 
-*This project is supported by [Hylé](hyle.eu), the lean blockchain for your provable apps.*
 <p align="left">
-  <a href="https://hyle.eu" target="_blank"> <img src="https://blog.hyle.eu/content/images/2024/10/Hyl-_widelogo_lightbg.png" width="15%", height="15%"/></a>
+  <a href="https://hyli.org" target="_blank"> <img src="https://github.com/hyli-org/hyli-assets/blob/main/Logos/Logo/HYLI_WORDMARK_ORANGE.png?raw=true" width="15%", height="15%"/></a>
 </p>
+
+*This project is supported by [Hyli](https://hyli.org), the new proof-powered L1 to build the next generation of apps, as part of the [Hyli grant program](https://github.com/hyli-org/hyli/blob/main/GRANTS.md).*
